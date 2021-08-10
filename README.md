@@ -46,9 +46,9 @@ Note: create the directories if they do not exist.
 # Interface
 Below are some screenshots of the interface.
 
-![Controller](assets/controller.png)
+![Controller](assets/controller.PNG)
 
-![Settings](assets/settings.png)
+![Settings](assets/settings.PNG)
 
 # Author
 Andrei Hutu ([hutu.andrei@gmail.com](hutu.andrei@gmail.com))
