@@ -54,4 +54,4 @@ Below are some screenshots of the interface.
 Andrei Hutu ([hutu.andrei@gmail.com](hutu.andrei@gmail.com))
 
 # License
-This extension is released under the [GNU General Public License (GPLv2)](https://www.gnu.org/licenses/gpl-2.0.html)  
+This extension is released under the [GNU General Public License (GPLv3)](https://www.gnu.org/licenses/gpl-3.0.html)  
