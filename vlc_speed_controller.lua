@@ -6,7 +6,7 @@ DEFAULT_CONFIG = {
     rewind = 5,
     advance = 5
 }
-cfg=DEFAULT_CONFIG
+
 ---------------- Standard VLC extension functions that must/can be implemented ---------------------
 
 
@@ -67,19 +67,22 @@ function create_dialog_controller()
     dlg = vlc.dialog(descriptor().title .. " > Speed Controller")
 
     -- SPEED
-    speed_widget = dlg:add_label("Speed: " .. round2(vlc.var.get(input,"rate"),2), 1, 1, 1, 1)
-    dlg:add_button("-", decr_speed, 3, 1, 1, 1)
-    dlg:add_button("+", incr_speed, 4, 1, 1, 1)
-    dlg:add_button("Preferred", pref_speed, 1, 2, 2, 1)
-    dlg:add_button("TOGGLE", toggle_speed, 1, 3, 3, 1)
+    dlg:add_label("Speed: ", 1, 1, 2, 1)
+    speed_widget = dlg:add_text_input(round2(vlc.var.get(input,"rate"),2), 3, 1, 2, 1)
+    dlg:add_button("Set", set_speed, 5, 1, 2, 1)
+    dlg:add_button("-", decr_speed, 3, 2, 1, 1)
+    dlg:add_button("+", incr_speed, 4, 2, 1, 1)
+    dlg:add_button("Preferred", pref_speed, 5, 2, 2, 1)
+    dlg:add_button("TOGGLE", toggle_speed, 1, 2, 2, 3)
 
     -- SEEK
-    dlg:add_button("<< Backwards", rewind, 3, 2, 1, 1)
-    dlg:add_button("Forwards >>", advance, 4, 2, 1, 1)
-    dlg:add_button("Next Frame", next_frame, 4, 3, 1, 1)
+    dlg:add_label("", 1, 1, 2, 1)
+    dlg:add_button("<< Backwards", rewind, 3, 3, 1, 1)
+    dlg:add_button("Forwards >>", advance, 4, 3, 1, 1)
+    dlg:add_button("Next Frame", next_frame, 5, 3, 2, 1)
 
     -- PLAY / PAUSE
-    dlg:add_button("Play / Pause", function() vlc.playlist.pause() end, 3,4,1,1)
+    dlg:add_button("Play / Pause", function() vlc.playlist.pause() end, 3,4,2,1)
 end
 
 
@@ -133,37 +136,51 @@ function on_click_save()
     dlg:hide()
 end
 
+
+function set_speed()
+    local input = vlc.object.input()
+    local new_speed = tonumber(speed_widget:get_text()) and tonumber(speed_widget:get_text()) or 1
+    vlc.var.set(input, "rate", new_speed)
+    cfg.toggle = new_speed
+    speed_widget:set_text(round2(new_speed,2))
+end
+
+
 function decr_speed()
     local input = vlc.object.input()
-    vlc.var.set(input, "rate", math.min(math.max(0.03, vlc.var.get(input,"rate") - cfg.decr),31.25))
-    local curr_speed = vlc.var.get(input,"rate")
-    if curr_speed ~= 1 then
-        cfg.toggle = curr_speed
+    local curr_speed = round1(vlc.var.get(input,"rate"),2)
+    local diff = round1(cfg.decr,2)
+    local new_speed = round1(curr_speed - diff,2)
+    vlc.var.set(input, "rate", math.min(math.max(0.03,  new_speed),31.25))
+    if new_speed ~= 1 then
+        cfg.toggle = new_speed
     end
-    speed_widget:set_text("Speed: " .. round2(curr_speed,2))
+    speed_widget:set_text(round2(new_speed,2))
 end
 
 
 function incr_speed()
     local input = vlc.object.input()
-    vlc.var.set(input, "rate", math.max(math.min(31.25, vlc.var.get(input,"rate") + cfg.incr),0.03))
-    local curr_speed = vlc.var.get(input,"rate")
-    if curr_speed ~= 1 then
-        cfg.toggle = curr_speed
+    local curr_speed = round1(vlc.var.get(input,"rate"),2)
+    local diff = round1(cfg.incr,2)
+    local new_speed = round1(curr_speed + diff,2)
+    vlc.var.set(input, "rate", math.max(math.min(31.25, new_speed),0.03))
+    if new_speed ~= 1 then
+        cfg.toggle = new_speed
     end
-    speed_widget:set_text("Speed: " .. round2(curr_speed,2))
+    speed_widget:set_text(round2(new_speed,2))
 end
 
 
 function toggle_speed()
     local input = vlc.object.input()
-    local curr_speed = vlc.var.get(input,"rate")
+    local curr_speed = round1(vlc.var.get(input,"rate"),2)
     if curr_speed ~= 1 then
         vlc.var.set(input, "rate", 1)
-        speed_widget:set_text("Speed: " .. 1.00)
+        speed_widget:set_text("1.00")
     else
         vlc.var.set(input, "rate", cfg.toggle)
-        speed_widget:set_text("Speed: " .. round2(cfg.toggle,2))
+        speed_widget:set_text(round2(cfg.toggle,2))
     end
 end
 
@@ -171,7 +188,7 @@ function pref_speed()
     local input = vlc.object.input()
     vlc.var.set(input, "rate", cfg.target)
     cfg.toggle = cfg.target
-    speed_widget:set_text("Speed: " .. round2(cfg.target,2))
+    speed_widget:set_text(round2(cfg.target,2))
 end
 
 function rewind()
@@ -196,8 +213,14 @@ function next_frame()
 end
 
 
-function round2(num, numDecimalPlaces)
-    return tonumber(string.format("%." .. numDecimalPlaces .. "f", num))
+function round1(num, nr_decimals)
+    local mult = 10^(nr_decimals or 0)
+    return math.floor(num * mult + 0.5) / mult
+end
+
+
+function round2(num, nr_decimals)
+    return string.format("%3." .. nr_decimals .. "f", num)
 end
 
 
