@@ -1,5 +1,5 @@
 # VLC Speed Controller
-Speed Controller Extension for VLC Media Player 3.0  
+Speed Controller Extension for VLC Media Player 3.x  
 This extension allows you to quickly switch between 1.0x speed and a user configurable target speed, while also providing a GUI for playback control.  
 Inspired by the functionality of the Google Chrome extension [Video Speed Controller](https://github.com/igrigorik/videospeed), as well as VLC extensions [Playback Speed Manager](https://github.com/ilgaiaz/playback-speed-manager) and [Jump to time Previous frame v3](https://addons.videolan.org/p/1154013/).  
 
@@ -38,10 +38,10 @@ Restart VLC.
 Note: create the directories if they do not exist.
 
 # How to use
-- To open the Speed Controller window, go to:  
-`View > VLC Speed Controller > Speed Controller`  
-- To change the extension's settings, go to:  
-`View > VLC Speed Controller > Settings`
+- To open on Windows / Linux, go to:  
+`View > VLC Speed Controller`  
+- To open on Mac OS, go to:  
+`VLC > Extensions > VLC Speed Controller`
 
 # Interface
 Below are some screenshots of the interface.
