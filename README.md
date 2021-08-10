@@ -51,7 +51,7 @@ Below are some screenshots of the interface.
 ![Settings](assets/settings.PNG)
 
 # Author
-Andrei Hutu ([hutu.andrei@gmail.com](hutu.andrei@gmail.com))
+Andrei Hutu ([hutu.andrei@gmail.com](mailto:hutu.andrei@gmail.com))
 
 # License
 This extension is released under the [GNU General Public License (GPLv3)](https://www.gnu.org/licenses/gpl-3.0.html)  
