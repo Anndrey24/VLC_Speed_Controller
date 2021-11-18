@@ -35,7 +35,7 @@ last_speed = 1.0
 function descriptor()
     return {
         title = "VLC Speed Controller";
-        version = "1.0";
+        version = "1.1";
         author = "Andrei Hutu";
         url = "https://github.com/Anndrey24/VLC_Speed_Controller";
         description = [[
