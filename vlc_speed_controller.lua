@@ -23,8 +23,11 @@ DEFAULT_CONFIG = {
     decr = 0.1,
     incr = 0.1,
     rewind = 5,
-    advance = 5
+    advance = 5,
+    keep_speed = 0
 }
+
+last_speed = 1.0
 
 ---------------- Standard VLC extension functions that must/can be implemented ---------------------
 
@@ -39,7 +42,7 @@ function descriptor()
 VLC Speed Controller
 This extension allows you to quickly switch between 1.0x speed and a user configurable target speed, while also providing a GUI for playback control.
 ]];
-        capabilities = {"menu"};
+        capabilities = {"menu","input-listener"};
         icon = icon_string ;
     }
 end
@@ -60,6 +63,15 @@ function close()
     on_click_cancel()
 end
 
+function input_changed()
+    if cfg.keep_speed == 1 then
+        local input = vlc.object.input()
+        vlc.var.set(input, "rate", last_speed)
+        if last_speed ~= 1 then
+            cfg.toggle = last_speed
+        end
+    end
+end
 
 function menu()
     return {"Speed Controller","Settings"}
@@ -90,6 +102,7 @@ function create_dialog_controller()
     -- SPEED
     dlg:add_label("Speed: ", 1, 1, 2, 1)
     speed_widget = dlg:add_text_input(round2(vlc.var.get(input,"rate"),2), 3, 1, 2, 1)
+    last_speed = tonumber(speed_widget:get_text())
     dlg:add_button("Set", set_speed, 5, 1, 2, 1)
     dlg:add_button("-", decr_speed, 3, 2, 1, 1)
     dlg:add_button("+", incr_speed, 4, 2, 1, 1)
@@ -130,11 +143,18 @@ function create_dialog_settings()
     -- TARGET
     dlg:add_label("Preferred speed: ", 1, 5, 1, 1)
     dd_target = dlg:add_text_input(cfg.target, 2, 5, 2, 1)
-   
+
+    -- KEEP SPEED
+    dlg:add_label("Maintain speed between tracks: ", 1, 6, 1, 1)
+    if cfg.keep_speed == 1 then
+        dd_keep = dlg:add_check_box("",true, 2, 6, 2, 1)
+    else
+        dd_keep = dlg:add_check_box("",false, 2, 6, 2, 1)
+    end
     -- SAVE / CANCEL
 
-    dlg:add_button("Save", on_click_save, 2, 6, 1, 1)
-    dlg:add_button("Cancel", on_click_cancel , 3, 6, 1, 1)
+    dlg:add_button("Save", on_click_save, 2, 7, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel , 3, 7, 1, 1)
 end
 
 
@@ -156,6 +176,11 @@ function on_click_save()
     cfg.incr = tonumber(dd_incr:get_text()) and tonumber(dd_incr:get_text()) or DEFAULT_CONFIG.incr
     cfg.rewind = tonumber(dd_rewind:get_text()) and tonumber(dd_rewind:get_text()) or DEFAULT_CONFIG.rewind
     cfg.advance = tonumber(dd_advance:get_text()) and tonumber(dd_advance:get_text()) or DEFAULT_CONFIG.advance
+    if dd_keep:get_checked() == true then
+        cfg.keep_speed = 1
+    else
+        cfg.keep_speed = 0
+    end
     save_config(cfg)
     dlg:delete()
     create_dialog_controller()
@@ -171,6 +196,7 @@ function set_speed()
         cfg.toggle = new_speed
     end
     speed_widget:set_text(round2(new_speed,2))
+    last_speed = tonumber(speed_widget:get_text())
 end
 
 
@@ -185,6 +211,7 @@ function decr_speed()
         cfg.toggle = new_speed
     end
     speed_widget:set_text(round2(new_speed,2))
+    last_speed = tonumber(speed_widget:get_text())
 end
 
 
@@ -199,6 +226,7 @@ function incr_speed()
         cfg.toggle = new_speed
     end
     speed_widget:set_text(round2(new_speed,2))
+    last_speed = tonumber(speed_widget:get_text())
 end
 
 
@@ -209,9 +237,11 @@ function toggle_speed()
     if curr_speed ~= 1 then
         vlc.var.set(input, "rate", 1)
         speed_widget:set_text("1.00")
+        last_speed = 1.00
     else
         vlc.var.set(input, "rate", cfg.toggle)
         speed_widget:set_text(round2(cfg.toggle,2))
+        last_speed = tonumber(speed_widget:get_text())
     end
 end
 
@@ -222,6 +252,7 @@ function pref_speed()
     vlc.var.set(input, "rate", cfg.target)
     cfg.toggle = cfg.target
     speed_widget:set_text(round2(cfg.target,2))
+    last_speed = tonumber(speed_widget:get_text())
 end
 
 
@@ -244,7 +275,9 @@ function next_frame()
     local input = vlc.object.input()
     for k0,v0 in pairs(vlc.input.item():info()) do
         for k1,v1 in pairs(v0) do
-            if tonumber(v1) then vlc.var.set(input, "time-offset",(1/v1)*1000000) return end
+            if tonumber(v1) then 
+                vlc.msg.info(tonumber(v1) .. " " .. 1000000/tonumber(v1))
+                vlc.var.set(input, "time-offset",math.floor(1000000/tonumber(v1))) return end
         end
     end
 end
