@@ -2,7 +2,8 @@
 Speed Controller Extension for VLC Media Player 3.x  
 This extension allows you to quickly switch between 1.0x speed and a user configurable target speed, while also providing a GUI for playback control.  
 Inspired by the functionality of the Google Chrome extension [Video Speed Controller](https://github.com/igrigorik/videospeed), as well as VLC extensions [Playback Speed Manager](https://github.com/ilgaiaz/playback-speed-manager) and [Jump to time Previous frame v3](https://addons.videolan.org/p/1154013/).  
-
+  
+The extension is published at [addons.videolan.org](https://addons.videolan.org/p/1571978/).
 ## Features
 - type in playback speed
 - decrease playback speed
