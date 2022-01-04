@@ -18,13 +18,20 @@ To use extension: View > VLC Speed Controller
 
 
 DEFAULT_CONFIG = {
-    target = 1.5,
     toggle = 1.5,
     decr = 0.1,
     incr = 0.1,
     rewind = 5,
     advance = 5,
-    keep_speed = 0
+    keep_speed = 0,
+    custom_speed_1 = 0.75,
+    custom_speed_2 = 1.00,
+    custom_speed_3 = 1.25,
+    custom_speed_4 = 1.50,
+    custom_speed_5 = 1.75,
+    custom_speed_6 = 2.00,
+    custom_speed_7 = 2.50,
+    custom_speed_8 = 3.00
 }
 
 last_speed = 1.0
@@ -35,7 +42,7 @@ last_speed = 1.0
 function descriptor()
     return {
         title = "VLC Speed Controller";
-        version = "1.1";
+        version = "1.2";
         author = "Andrei Hutu";
         url = "https://github.com/Anndrey24/VLC_Speed_Controller";
         description = [[
@@ -100,23 +107,33 @@ function create_dialog_controller()
     dlg = vlc.dialog("Speed Controller")
 
     -- SPEED
-    dlg:add_label("Speed: ", 1, 1, 2, 1)
-    speed_widget = dlg:add_text_input(round2(vlc.var.get(input,"rate"),2), 3, 1, 2, 1)
+    dlg:add_label("Playback Speed: ", 1, 1, 2, 1)
+    dlg:add_button("-", decr_speed, 3, 1, 1, 1)
+    dlg:add_button("+", incr_speed, 4, 1, 1, 1)
+    speed_widget = dlg:add_text_input(round2(vlc.var.get(input,"rate"),2), 5, 1, 2, 1)
     last_speed = tonumber(speed_widget:get_text())
-    dlg:add_button("Set", set_speed, 5, 1, 2, 1)
-    dlg:add_button("-", decr_speed, 3, 2, 1, 1)
-    dlg:add_button("+", incr_speed, 4, 2, 1, 1)
-    dlg:add_button("Preferred", pref_speed, 5, 2, 2, 1)
-    dlg:add_button("TOGGLE", toggle_speed, 1, 2, 2, 3)
+    dlg:add_button("Set", set_speed, 7, 1, 2, 1)
+    dlg:add_button(round2(cfg.custom_speed_1,2), function() change_speed(round1(cfg.custom_speed_1,2)) end, 1, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_2,2), function() change_speed(round1(cfg.custom_speed_2,2)) end, 2, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_3,2), function() change_speed(round1(cfg.custom_speed_3,2)) end, 3, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_4,2), function() change_speed(round1(cfg.custom_speed_4,2)) end, 4, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_5,2), function() change_speed(round1(cfg.custom_speed_5,2)) end, 5, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_6,2), function() change_speed(round1(cfg.custom_speed_6,2)) end, 6, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_7,2), function() change_speed(round1(cfg.custom_speed_7,2)) end, 7, 2, 1, 1)
+    dlg:add_button(round2(cfg.custom_speed_8,2), function() change_speed(round1(cfg.custom_speed_8,2)) end, 8, 2, 1, 1)
+    dlg:add_button("TOGGLE", toggle_speed, 1, 3, 2, 1)
 
     -- SEEK
     dlg:add_label("", 1, 1, 2, 1)
-    dlg:add_button("<< Backwards", rewind, 3, 3, 1, 1)
-    dlg:add_button("Forwards >>", advance, 4, 3, 1, 1)
-    dlg:add_button("Next Frame", next_frame, 5, 3, 2, 1)
+    dlg:add_button("<< Backwards", rewind, 3, 3, 2, 1)
+    dlg:add_button("Forwards >>", advance, 5, 3, 2, 1)
+    dlg:add_button("Next Frame", next_frame, 7, 3, 2, 1)
 
     -- PLAY / PAUSE
-    dlg:add_button("Play / Pause", function() vlc.playlist.pause() end, 3,4,2,1)
+    dlg:add_button("Play / Pause", function() vlc.playlist.pause() end, 3,4,4,1)
+
+    -- SETTINGS
+    dlg:add_button("Settings", function() on_click_cancel(); create_dialog_settings(); end, 7,4,2,1)
 end
 
 
@@ -140,10 +157,6 @@ function create_dialog_settings()
     dlg:add_label("Advance (in sec): ", 1, 4, 1, 1)
     dd_advance = dlg:add_text_input(cfg.advance, 2, 4, 2, 1)
 
-    -- TARGET
-    dlg:add_label("Preferred speed: ", 1, 5, 1, 1)
-    dd_target = dlg:add_text_input(cfg.target, 2, 5, 2, 1)
-
     -- KEEP SPEED
     dlg:add_label("Maintain speed between tracks: ", 1, 6, 1, 1)
     if cfg.keep_speed == 1 then
@@ -151,10 +164,28 @@ function create_dialog_settings()
     else
         dd_keep = dlg:add_check_box("",false, 2, 6, 2, 1)
     end
-    -- SAVE / CANCEL
 
-    dlg:add_button("Save", on_click_save, 2, 7, 1, 1)
-    dlg:add_button("Cancel", on_click_cancel , 3, 7, 1, 1)
+    -- CUSTOM SPEED
+    dlg:add_label("Custom Speed 1: ", 1, 7, 1, 1)
+    dd_c1 = dlg:add_text_input(cfg.custom_speed_1, 2, 7, 2, 1)
+    dlg:add_label("Custom Speed 2: ", 1, 8, 1, 1)
+    dd_c2 = dlg:add_text_input(cfg.custom_speed_2, 2, 8, 2, 1)
+    dlg:add_label("Custom Speed 3: ", 1, 9, 1, 1)
+    dd_c3 = dlg:add_text_input(cfg.custom_speed_3, 2, 9, 2, 1)
+    dlg:add_label("Custom Speed 4: ", 1, 10, 1, 1)
+    dd_c4 = dlg:add_text_input(cfg.custom_speed_4, 2, 10, 2, 1)
+    dlg:add_label("Custom Speed 5: ", 1, 11, 1, 1)
+    dd_c5 = dlg:add_text_input(cfg.custom_speed_5, 2, 11, 2, 1)
+    dlg:add_label("Custom Speed 6: ", 1, 12, 1, 1)
+    dd_c6 = dlg:add_text_input(cfg.custom_speed_6, 2, 12, 2, 1)
+    dlg:add_label("Custom Speed 7: ", 1, 13, 1, 1)
+    dd_c7 = dlg:add_text_input(cfg.custom_speed_7, 2, 13, 2, 1)
+    dlg:add_label("Custom Speed 8: ", 1, 14, 1, 1)
+    dd_c8 = dlg:add_text_input(cfg.custom_speed_8, 2, 14, 2, 1)
+
+    -- SAVE / CANCEL
+    dlg:add_button("Save", on_click_save, 2, 15, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel , 3, 15, 1, 1)
 end
 
 
@@ -169,25 +200,30 @@ end
 
 --- Saves settings.
 function on_click_save()
-    cfg.target = tonumber(dd_target:get_text()) and tonumber(dd_target:get_text()) or DEFAULT_CONFIG.target
-    cfg.target = math.min(31.25, math.max(0.03,cfg.target))
-    cfg.toggle = cfg.target
-    cfg.decr = tonumber(dd_decr:get_text()) and tonumber(dd_decr:get_text()) or DEFAULT_CONFIG.decr
-    cfg.incr = tonumber(dd_incr:get_text()) and tonumber(dd_incr:get_text()) or DEFAULT_CONFIG.incr
-    cfg.rewind = tonumber(dd_rewind:get_text()) and tonumber(dd_rewind:get_text()) or DEFAULT_CONFIG.rewind
-    cfg.advance = tonumber(dd_advance:get_text()) and tonumber(dd_advance:get_text()) or DEFAULT_CONFIG.advance
+    cfg.decr = tonumber(dd_decr:get_text()) or DEFAULT_CONFIG.decr
+    cfg.incr = tonumber(dd_incr:get_text()) or DEFAULT_CONFIG.incr
+    cfg.rewind = tonumber(dd_rewind:get_text()) or DEFAULT_CONFIG.rewind
+    cfg.advance = tonumber(dd_advance:get_text()) or DEFAULT_CONFIG.advance
     if dd_keep:get_checked() == true then
         cfg.keep_speed = 1
     else
         cfg.keep_speed = 0
     end
+    cfg.custom_speed_1 = bound(tonumber(dd_c1:get_text()) or DEFAULT_CONFIG.custom_speed_1)
+    cfg.custom_speed_2 = bound(tonumber(dd_c2:get_text()) or DEFAULT_CONFIG.custom_speed_2)
+    cfg.custom_speed_3 = bound(tonumber(dd_c3:get_text()) or DEFAULT_CONFIG.custom_speed_3)
+    cfg.custom_speed_4 = bound(tonumber(dd_c4:get_text()) or DEFAULT_CONFIG.custom_speed_4)
+    cfg.custom_speed_5 = bound(tonumber(dd_c5:get_text()) or DEFAULT_CONFIG.custom_speed_5)
+    cfg.custom_speed_6 = bound(tonumber(dd_c6:get_text()) or DEFAULT_CONFIG.custom_speed_6)
+    cfg.custom_speed_7 = bound(tonumber(dd_c7:get_text()) or DEFAULT_CONFIG.custom_speed_7)
+    cfg.custom_speed_8 = bound(tonumber(dd_c8:get_text()) or DEFAULT_CONFIG.custom_speed_8)
     save_config(cfg)
     dlg:delete()
     create_dialog_controller()
 end
 
 
---- Sets playback speed to a specific value.
+--- Sets playback speed to a specific value from text input.
 function set_speed()
     local input = vlc.object.input()
     local new_speed = tonumber(speed_widget:get_text()) and tonumber(speed_widget:get_text()) or 1
@@ -199,6 +235,16 @@ function set_speed()
     last_speed = tonumber(speed_widget:get_text())
 end
 
+--- Sets playback speed to a specific value from parameter.
+function change_speed(new_speed)
+    local input = vlc.object.input()
+    vlc.var.set(input, "rate", new_speed)
+    if new_speed ~= 1 then
+        cfg.toggle = new_speed
+    end
+    speed_widget:set_text(round2(new_speed,2))
+    last_speed = tonumber(speed_widget:get_text())
+end
 
 --- Decreases playback speed by an increment.
 function decr_speed()
@@ -245,17 +291,6 @@ function toggle_speed()
     end
 end
 
-
---- Switches to target speed.
-function pref_speed()
-    local input = vlc.object.input()
-    vlc.var.set(input, "rate", cfg.target)
-    cfg.toggle = cfg.target
-    speed_widget:set_text(round2(cfg.target,2))
-    last_speed = tonumber(speed_widget:get_text())
-end
-
-
 --- Jumps back by a specific time.
 function rewind()
     local input = vlc.object.input()
@@ -293,7 +328,9 @@ function round2(num, nr_decimals)
     return string.format("%3." .. nr_decimals .. "f", num)
 end
 
-
+function bound(speed)
+    return math.min(31.25, math.max(0.03,speed))
+end
 ---------------------------- Config management functions -------------------------------------------
 
 
@@ -310,7 +347,7 @@ function load_config()
         save_config(cfg)
         return cfg
     end
-    local cfg = {};
+    local cfg = DEFAULT_CONFIG;
     for line in file:lines() do
         -- Match "[key] = [value]" pairs (eg. target = 1.5, incr=0.1) 
         local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
